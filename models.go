@@ -2,7 +2,7 @@ package ucodesdk
 
 type (
 	Request struct {
-		Data map[string]interface{} `json:"data"`
+		Data map[string]any `json:"data"`
 	}
 	Argument struct {
 		Request     Request `json:"request"`
@@ -16,7 +16,7 @@ type (
 	Datas struct {
 		Data struct {
 			Data struct {
-				Data map[string]interface{} `json:"data"`
+				Data map[string]any `json:"data"`
 			} `json:"data"`
 		} `json:"data"`
 	}
@@ -31,13 +31,13 @@ type (
 	}
 
 	ClientApiResp struct {
-		Response map[string]interface{} `json:"response"`
+		Response map[string]any `json:"response"`
 	}
 
 	Response struct {
 		Status string                 `json:"status"`
 		Error  string                 `json:"error"`
-		Data   map[string]interface{} `json:"data"`
+		Data   map[string]any `json:"data"`
 	}
 
 	// GetListClientApiResponse This is get list api response >>>>> GET_LIST, GET_LIST_SLIM
@@ -50,7 +50,7 @@ type (
 	}
 
 	GetListClientApiResp struct {
-		Response []map[string]interface{} `json:"response"`
+		Response []map[string]any `json:"response"`
 	}
 
 	// ClientApiUpdateResponse This is single update api response >>>>> UPDATE
@@ -59,7 +59,7 @@ type (
 		Description string `json:"description"`
 		Data        struct {
 			TableSlug string                 `json:"table_slug"`
-			Data      map[string]interface{} `json:"data"`
+			Data      map[string]any `json:"data"`
 		} `json:"data"`
 	}
 
@@ -69,7 +69,7 @@ type (
 		Description string `json:"description"`
 		Data        struct {
 			Data struct {
-				Objects []map[string]interface{} `json:"objects"`
+				Objects []map[string]any `json:"objects"`
 			} `json:"data"`
 		} `json:"data"`
 	}
