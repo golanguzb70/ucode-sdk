@@ -48,7 +48,7 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 	return getListObject, response, nil
 }
 
-func DoRequest(url string, method string, body any, appId string) ([]byte, error) {
+func DoRequest(url string, method string, body interface{}, appId string) ([]byte, error) {
 	data, err := json.Marshal(&body)
 	if err != nil {
 		return nil, err
