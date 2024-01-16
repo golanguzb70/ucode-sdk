@@ -14,7 +14,7 @@ import (
 
 type UcodeApis interface {
 	/*
-		GetList is function that get list of objects from specific table using filter. 
+		GetList is function that get list of objects from specific table using filter.
 		This method works slower because it gets all the information
 		about the table, fields and view.
 		default_value:
@@ -22,6 +22,13 @@ type UcodeApis interface {
 			limit = 10
 	*/
 	GetList(arg *Argument) (GetListClientApiResponse, Response, error)
+	/*
+		GetSingle is function that get one object with all the information of fields, formulas, views and relations.
+		It is better to use GetSlim for better performance
+
+		guid="your_guid"
+	*/
+	GetSingle(arg *Argument) (ClientApiResponse, Response, error)
 }
 
 type object struct {
@@ -67,6 +74,30 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 	}
 
 	return getListObject, response, nil
+}
+
+func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
+	var (
+		response  Response
+		getObject ClientApiResponse
+		url       = fmt.Sprintf("%s/v1/object/%s/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, cast.ToString(arg.Request.Data["guid"]), arg.DisableFaas)
+	)
+
+	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiResponse{}, response, err
+	}
+
+	err = json.Unmarshal(resByte, &getObject)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling get list object", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiResponse{}, response, err
+	}
+
+	return getObject, response, nil
 }
 
 func DoRequest(url string, method string, body interface{}, appId string) ([]byte, error) {
