@@ -8,9 +8,19 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/spf13/cast"
 )
 
 type UcodeApis interface {
+	/*
+		GetList is function that get list of objects from specific table using filter. 
+		This method works slower because it gets all the information
+		about the table, fields and view.
+		default_value:
+			page = 1
+			limit = 10
+	*/
 	GetList(arg *Argument) (GetListClientApiResponse, Response, error)
 }
 
@@ -30,6 +40,17 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 		getListObject GetListClientApiResponse
 		url           = fmt.Sprintf("%s/v1/object/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
 	)
+
+	page := cast.ToInt(arg.Request.Data["page"])
+	limit := cast.ToInt(arg.Request.Data["limit"])
+	if page == 0 {
+		page++
+	}
+	if limit == 0 {
+		limit = 10
+	}
+	arg.Request.Data["offset"] = (page - 1) * limit
+	arg.Request.Data["limit"] = limit
 
 	getListResponseInByte, err := DoRequest(url, "POST", arg.Request, o.config.AppId)
 	if err != nil {
