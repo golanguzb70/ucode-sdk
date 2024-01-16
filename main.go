@@ -44,6 +44,11 @@ type UcodeApis interface {
 		guid="your_guid"
 	*/
 	GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error)
+	/*
+		CreateObject is a function that creates new object.
+
+	*/
+	CreateObject(arg *Argument) (Datas, Response, error)
 }
 
 type object struct {
@@ -54,6 +59,32 @@ func New(cfg Config) UcodeApis {
 	return &object{
 		config: cfg,
 	}
+}
+
+func (o *object) CreateObject(arg *Argument) (Datas, Response, error) {
+	var (
+		response = Response{
+			Status: "done",
+		}
+		createdObject Datas
+		url           = fmt.Sprintf("%s/v1/object/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+	)
+
+	createObjectResponseInByte, err := DoRequest(url, "POST", arg.Request, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Can't send request", "error": err.Error()}
+		response.Status = "error"
+		return Datas{}, response, err
+	}
+
+	err = json.Unmarshal(createObjectResponseInByte, &createdObject)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling create object", "error": err.Error()}
+		response.Status = "error"
+		return Datas{}, response, err
+	}
+	
+	return createdObject, response, nil
 }
 
 func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, error) {
