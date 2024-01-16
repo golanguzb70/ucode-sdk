@@ -49,6 +49,10 @@ type UcodeApis interface {
 
 	*/
 	CreateObject(arg *Argument) (Datas, Response, error)
+	/*
+		UpdateObject is a function that updates specific object
+	*/
+	UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response, error)
 }
 
 type object struct {
@@ -83,8 +87,34 @@ func (o *object) CreateObject(arg *Argument) (Datas, Response, error) {
 		response.Status = "error"
 		return Datas{}, response, err
 	}
-	
+
 	return createdObject, response, nil
+}
+
+func (o *object) UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response, error) {
+	var (
+		response = Response{
+			Status: "done",
+		}
+		updateObject ClientApiUpdateResponse
+		url          = fmt.Sprintf("%s/v1/object/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+	)
+
+	updateObjectResponseInByte, err := DoRequest(url, "PUT", arg.Request, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while updating object", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiUpdateResponse{}, response, err
+	}
+
+	err = json.Unmarshal(updateObjectResponseInByte, &updateObject)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling update object", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiUpdateResponse{}, response, err
+	}
+
+	return updateObject, response, nil
 }
 
 func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, error) {
