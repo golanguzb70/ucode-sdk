@@ -57,6 +57,11 @@ type UcodeApis interface {
 		MultipleUpdate is a function that updates multiple objects at once
 	*/
 	MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse, Response, error)
+	/*
+		Delete is a function that is used to delete one object
+		map[guid]="actual_guid"
+	*/
+	Delete(arg *Argument) (Response, error)
 }
 
 type object struct {
@@ -269,6 +274,24 @@ func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, erro
 	}
 
 	return getObject, response, nil
+}
+
+func (o *object) Delete(arg *Argument) (Response, error) {
+	var (
+		response = Response{
+			Status: "done",
+		}
+		url = fmt.Sprintf("%s/v1/object/%s/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, cast.ToString(arg.Request.Data["guid"]), arg.DisableFaas)
+	)
+
+	_, err := DoRequest(url, "DELETE", nil, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while deleting object", "error": err.Error()}
+		response.Status = "error"
+		return response, err
+	}
+
+	return response, nil
 }
 
 func DoRequest(url string, method string, body interface{}, appId string) ([]byte, error) {
