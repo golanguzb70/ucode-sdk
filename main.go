@@ -53,6 +53,10 @@ type UcodeApis interface {
 		UpdateObject is a function that updates specific object
 	*/
 	UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response, error)
+	/*
+		MultipleUpdate is a function that updates multiple objects at once
+	*/
+	MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse, Response, error)
 }
 
 type object struct {
@@ -115,6 +119,31 @@ func (o *object) UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response,
 	}
 
 	return updateObject, response, nil
+}
+
+func (o *object) MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse, Response, error) {
+	var (
+		response = Response{
+			Status: "done",
+		}
+		multipleUpdateObject ClientApiMultipleUpdateResponse
+		url                  = fmt.Sprintf("%s/v1/object/multiple-update/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+	)
+	multipleUpdateObjectsResponseInByte, err := DoRequest(url, "PUT", arg.Request, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while multiple updating objects", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiMultipleUpdateResponse{}, response, errors.New("error")
+	}
+
+	err = json.Unmarshal(multipleUpdateObjectsResponseInByte, &multipleUpdateObject)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling multiple update objects", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiMultipleUpdateResponse{}, response, errors.New("error")
+	}
+
+	return ClientApiMultipleUpdateResponse{}, response, nil
 }
 
 func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, error) {
