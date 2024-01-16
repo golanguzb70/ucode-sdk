@@ -37,6 +37,13 @@ type UcodeApis interface {
 			limit = 10
 	*/
 	GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error)
+	/*
+		GetSingleSlim is function that get one object with its fields.
+		It is light and fast to use.
+
+		guid="your_guid"
+	*/
+	GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error)
 }
 
 type object struct {
@@ -143,6 +150,30 @@ func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
 	err = json.Unmarshal(resByte, &getObject)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while unmarshalling get list object", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiResponse{}, response, err
+	}
+
+	return getObject, response, nil
+}
+
+func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error) {
+	var (
+		response  Response
+		getObject ClientApiResponse
+		url       = fmt.Sprintf("%s/v1/object-slim/%s/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, cast.ToString(arg.Request.Data["guid"]), arg.DisableFaas)
+	)
+
+	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
+		response.Status = "error"
+		return ClientApiResponse{}, response, err
+	}
+
+	err = json.Unmarshal(resByte, &getObject)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling to object", "error": err.Error()}
 		response.Status = "error"
 		return ClientApiResponse{}, response, err
 	}
