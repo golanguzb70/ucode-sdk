@@ -62,6 +62,11 @@ type UcodeApis interface {
 		map[guid]="actual_guid"
 	*/
 	Delete(arg *Argument) (Response, error)
+	/*
+		MultipleDelete is a function that is used to delete multiple objects
+		map[ids]=[list of ids]
+	*/
+	MultipleDelete(arg *Argument) (Response, error)
 }
 
 type object struct {
@@ -294,6 +299,23 @@ func (o *object) Delete(arg *Argument) (Response, error) {
 	return response, nil
 }
 
+func (o *object) MultipleDelete(arg *Argument) (Response, error) {
+	var (
+		response = Response{
+			Status: "done",
+		}
+		url = fmt.Sprintf("%s/v1/object/%s/?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+	)
+
+	_, err := DoRequest(url, "DELETE", arg.Request.Data, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while deleting objects", "error": err.Error()}
+		response.Status = "error"
+		return response, err
+	}
+
+	return response, nil
+}
 func DoRequest(url string, method string, body interface{}, appId string) ([]byte, error) {
 	data, err := json.Marshal(&body)
 	if err != nil {
