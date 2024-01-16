@@ -29,6 +29,14 @@ type UcodeApis interface {
 		guid="your_guid"
 	*/
 	GetSingle(arg *Argument) (ClientApiResponse, Response, error)
+	/*
+		GetListSlim is function that get list of objects from specific table using filter.
+		This method works much lighter than GetList because it doesn't get all information about the table, fields and view.
+		default_value:
+			page = 1
+			limit = 10
+	*/
+	GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error)
 }
 
 type object struct {
@@ -50,10 +58,10 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 
 	page := cast.ToInt(arg.Request.Data["page"])
 	limit := cast.ToInt(arg.Request.Data["limit"])
-	if page == 0 {
-		page++
+	if page <= 0 {
+		page = 1
 	}
-	if limit == 0 {
+	if limit <= 0 {
 		limit = 10
 	}
 	arg.Request.Data["offset"] = (page - 1) * limit
@@ -74,6 +82,48 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 	}
 
 	return getListObject, response, nil
+}
+
+func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error) {
+	var (
+		response Response
+		listSlim GetListClientApiResponse
+		url      = fmt.Sprintf("%s/v1/object-slim/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+	)
+
+	reqObject, err := json.Marshal(arg.Request.Data)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while marshalling request getting list slim object", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, err
+	}
+
+	page := cast.ToInt(arg.Request.Data["page"])
+	limit := cast.ToInt(arg.Request.Data["limit"])
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	url = fmt.Sprintf("%s&data=%s&offset=%d&limit=%d", url, string(reqObject), (page-1)*limit, limit)
+
+	getListResponseInByte, err := DoRequest(url, "GET", nil, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, err
+	}
+
+	err = json.Unmarshal(getListResponseInByte, &listSlim)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling get list object", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, errors.New("invalid response")
+	}
+
+	return listSlim, response, nil
 }
 
 func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
