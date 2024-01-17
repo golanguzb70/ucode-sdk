@@ -67,6 +67,10 @@ type UcodeApis interface {
 		map[ids]=[list of ids]
 	*/
 	MultipleDelete(arg *Argument) (Response, error)
+	/*
+		Send is a function that is used to Send logs to telegram bots
+	*/
+	Send(text string) error
 }
 
 type object struct {
@@ -316,6 +320,36 @@ func (o *object) MultipleDelete(arg *Argument) (Response, error) {
 
 	return response, nil
 }
+
+func (o *object) Send(text string) error {
+	client := &http.Client{}
+
+	text = o.config.TableSlug + " >>> " + time.Now().Format(time.RFC3339) + " >>> " + text
+
+	for _, e := range o.config.AccountIds {
+		botUrl := fmt.Sprintf("https://api.telegram.org/bot"+o.config.BotToken+"/sendMessage?chat_id="+e+"&text=%s", text)
+		request, err := http.NewRequest("GET", botUrl, nil)
+		if err != nil {
+			return err
+		}
+
+		resp, err := client.Do(request)
+		if err != nil {
+			return err
+		}
+
+		resp.Body.Close()
+	}
+
+	return nil
+}
+
+/*
+DoRequest is a function to send http request easily
+It gets url, method, body, app_id(for ucode purpose) as paramters
+
+Returns body of the response as array of bytes and error
+*/
 func DoRequest(url string, method string, body interface{}, appId string) ([]byte, error) {
 	data, err := json.Marshal(&body)
 	if err != nil {
