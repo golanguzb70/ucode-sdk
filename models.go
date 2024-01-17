@@ -4,9 +4,19 @@ type (
 	Request struct {
 		Data map[string]interface{} `json:"data"`
 	}
+
 	Argument struct {
 		Request     Request `json:"request"`
 		DisableFaas bool    `json:"disable_faas"`
+	}
+
+	Data struct {
+		AppId      string                 `json:"app_id"`
+		Method     string                 `json:"method"`
+		ObjectData map[string]interface{} `json:"object_data"`
+		ObjectIds  []string               `json:"object_ids"`
+		TableSlug  string                 `json:"table_slug"`
+		UserId     string                 `json:"user_id"`
 	}
 )
 
