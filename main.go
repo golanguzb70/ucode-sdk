@@ -69,13 +69,17 @@ type UcodeApis interface {
 		Send is a function that is used to Send logs to telegram bots
 	*/
 	Send(text string) error
+	/*
+		Returns reference to config field.
+	*/
+	Config() *Config
 }
 
 type object struct {
-	config Config
+	config *Config
 }
 
-func New(cfg Config) UcodeApis {
+func New(cfg *Config) UcodeApis {
 	return &object{
 		config: cfg,
 	}
@@ -167,14 +171,14 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 		limit         int
 	)
 
-	_, ok := arg.Request.Data["page"]
+	_, ok := arg.Request.Data.ObjectData["page"]
 	if ok {
-		page = arg.Request.Data["page"].(int)
+		page = arg.Request.Data.ObjectData["page"].(int)
 	}
 
-	_, ok = arg.Request.Data["limit"]
+	_, ok = arg.Request.Data.ObjectData["limit"]
 	if ok {
-		limit = arg.Request.Data["limit"].(int)
+		limit = arg.Request.Data.ObjectData["limit"].(int)
 	}
 	if page <= 0 {
 		page = 1
@@ -183,8 +187,8 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 		limit = 10
 	}
 
-	arg.Request.Data["offset"] = (page - 1) * limit
-	arg.Request.Data["limit"] = limit
+	arg.Request.Data.ObjectData["offset"] = (page - 1) * limit
+	arg.Request.Data.ObjectData["limit"] = limit
 
 	getListResponseInByte, err := DoRequest(url, "POST", arg.Request, o.config.AppId)
 	if err != nil {
@@ -211,20 +215,20 @@ func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response,
 		page, limit int
 	)
 
-	reqObject, err := json.Marshal(arg.Request.Data)
+	reqObject, err := json.Marshal(arg.Request.Data.ObjectData)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while marshalling request getting list slim object", "error": err.Error()}
 		response.Status = "error"
 		return GetListClientApiResponse{}, response, err
 	}
-	_, ok := arg.Request.Data["page"]
+	_, ok := arg.Request.Data.ObjectData["page"]
 	if ok {
-		page = arg.Request.Data["page"].(int)
+		page = arg.Request.Data.ObjectData["page"].(int)
 	}
 
-	_, ok = arg.Request.Data["limit"]
+	_, ok = arg.Request.Data.ObjectData["limit"]
 	if ok {
-		limit = arg.Request.Data["limit"].(int)
+		limit = arg.Request.Data.ObjectData["limit"].(int)
 	}
 	if page <= 0 {
 		page = 1
@@ -263,7 +267,7 @@ func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
 	var (
 		response  Response
 		getObject ClientApiResponse
-		url       = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data["guid"], arg.DisableFaas)
+		url       = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
 	)
 
 	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
@@ -287,7 +291,7 @@ func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, erro
 	var (
 		response  Response
 		getObject ClientApiResponse
-		url       = fmt.Sprintf("%s/v1/object-slim/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data["guid"], arg.DisableFaas)
+		url       = fmt.Sprintf("%s/v1/object-slim/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
 	)
 
 	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
@@ -312,7 +316,7 @@ func (o *object) Delete(arg *Argument) (Response, error) {
 		response = Response{
 			Status: "done",
 		}
-		url = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data["guid"], arg.DisableFaas)
+		url = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
 	)
 
 	_, err := DoRequest(url, "DELETE", nil, o.config.AppId)
@@ -333,7 +337,7 @@ func (o *object) MultipleDelete(arg *Argument) (Response, error) {
 		url = fmt.Sprintf("%s/v1/object/%s/?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
 	)
 
-	_, err := DoRequest(url, "DELETE", arg.Request.Data, o.config.AppId)
+	_, err := DoRequest(url, "DELETE", arg.Request.Data.ObjectData, o.config.AppId)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while deleting objects", "error": err.Error()}
 		response.Status = "error"
@@ -398,4 +402,8 @@ func DoRequest(url string, method string, body interface{}, appId string) ([]byt
 
 	respByte, err := io.ReadAll(resp.Body)
 	return respByte, err
+}
+
+func (o *object) Config() *Config {
+	return o.config
 }

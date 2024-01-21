@@ -2,7 +2,7 @@ package ucodesdk
 
 type (
 	Request struct {
-		Data map[string]interface{} `json:"data"`
+		Data Data `json:"data"`
 	}
 
 	Argument struct {
