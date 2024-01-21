@@ -1,3 +1,3 @@
 module github.com/golanguzb70/ucode-sdk
 
-go 1.20
+go 1.18
