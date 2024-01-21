@@ -8,8 +8,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/spf13/cast"
 )
 
 type UcodeApis interface {
@@ -165,16 +163,26 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 		response      Response
 		getListObject GetListClientApiResponse
 		url           = fmt.Sprintf("%s/v1/object/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		page          int
+		limit         int
 	)
 
-	page := cast.ToInt(arg.Request.Data["page"])
-	limit := cast.ToInt(arg.Request.Data["limit"])
+	_, ok := arg.Request.Data["page"]
+	if ok {
+		page = arg.Request.Data["page"].(int)
+	}
+
+	_, ok = arg.Request.Data["limit"]
+	if ok {
+		limit = arg.Request.Data["limit"].(int)
+	}
 	if page <= 0 {
 		page = 1
 	}
 	if limit <= 0 {
 		limit = 10
 	}
+
 	arg.Request.Data["offset"] = (page - 1) * limit
 	arg.Request.Data["limit"] = limit
 
@@ -197,9 +205,10 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 
 func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error) {
 	var (
-		response Response
-		listSlim GetListClientApiResponse
-		url      = fmt.Sprintf("%s/v1/object-slim/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		response    Response
+		listSlim    GetListClientApiResponse
+		url         = fmt.Sprintf("%s/v1/object-slim/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		page, limit int
 	)
 
 	reqObject, err := json.Marshal(arg.Request.Data)
@@ -208,9 +217,22 @@ func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response,
 		response.Status = "error"
 		return GetListClientApiResponse{}, response, err
 	}
+	_, ok := arg.Request.Data["page"]
+	if ok {
+		page = arg.Request.Data["page"].(int)
+	}
 
-	page := cast.ToInt(arg.Request.Data["page"])
-	limit := cast.ToInt(arg.Request.Data["limit"])
+	_, ok = arg.Request.Data["limit"]
+	if ok {
+		limit = arg.Request.Data["limit"].(int)
+	}
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
 	if page <= 0 {
 		page = 1
 	}
@@ -241,7 +263,7 @@ func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
 	var (
 		response  Response
 		getObject ClientApiResponse
-		url       = fmt.Sprintf("%s/v1/object/%s/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, cast.ToString(arg.Request.Data["guid"]), arg.DisableFaas)
+		url       = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data["guid"], arg.DisableFaas)
 	)
 
 	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
@@ -265,7 +287,7 @@ func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, erro
 	var (
 		response  Response
 		getObject ClientApiResponse
-		url       = fmt.Sprintf("%s/v1/object-slim/%s/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, cast.ToString(arg.Request.Data["guid"]), arg.DisableFaas)
+		url       = fmt.Sprintf("%s/v1/object-slim/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data["guid"], arg.DisableFaas)
 	)
 
 	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
@@ -290,7 +312,7 @@ func (o *object) Delete(arg *Argument) (Response, error) {
 		response = Response{
 			Status: "done",
 		}
-		url = fmt.Sprintf("%s/v1/object/%s/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, cast.ToString(arg.Request.Data["guid"]), arg.DisableFaas)
+		url = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data["guid"], arg.DisableFaas)
 	)
 
 	_, err := DoRequest(url, "DELETE", nil, o.config.AppId)
