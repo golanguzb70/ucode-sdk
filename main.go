@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Config is a struct that contains all the information about the table and app
 type UcodeApis interface {
 	/*
 		GetList is function that get list of objects from specific table using filter.
@@ -75,16 +76,19 @@ type UcodeApis interface {
 	Config() *Config
 }
 
+// object is a struct that implements UcodeApis interface
 type object struct {
 	config *Config
 }
 
+// New is a function that returns reference to object struct
 func New(cfg *Config) UcodeApis {
 	return &object{
 		config: cfg,
 	}
 }
 
+// CreateObject is a function that creates new object.
 func (o *object) CreateObject(arg *Argument) (Datas, Response, error) {
 	var (
 		response = Response{
@@ -111,6 +115,7 @@ func (o *object) CreateObject(arg *Argument) (Datas, Response, error) {
 	return createdObject, response, nil
 }
 
+// UpdateObject is a function that updates specific object
 func (o *object) UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response, error) {
 	var (
 		response = Response{
@@ -137,6 +142,7 @@ func (o *object) UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response,
 	return updateObject, response, nil
 }
 
+// MultipleUpdate is a function that updates multiple objects at once
 func (o *object) MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse, Response, error) {
 	var (
 		response = Response{
@@ -162,6 +168,7 @@ func (o *object) MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse,
 	return ClientApiMultipleUpdateResponse{}, response, nil
 }
 
+// GetList is function that get list of objects from specific table using filter.
 func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, error) {
 	var (
 		response      Response
@@ -207,6 +214,7 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 	return getListObject, response, nil
 }
 
+// GetListSlim is function that get list of objects from specific table using filter.
 func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error) {
 	var (
 		response    Response
@@ -263,6 +271,7 @@ func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response,
 	return listSlim, response, nil
 }
 
+// GetSingle is function that get one object with all the information of fields, formulas, views and relations.
 func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
 	var (
 		response  Response
@@ -287,6 +296,7 @@ func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
 	return getObject, response, nil
 }
 
+// GetSingleSlim is function that get one object with its fields.
 func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error) {
 	var (
 		response  Response
@@ -311,6 +321,7 @@ func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, erro
 	return getObject, response, nil
 }
 
+// Delete is a function that is used to delete one object
 func (o *object) Delete(arg *Argument) (Response, error) {
 	var (
 		response = Response{
@@ -329,6 +340,7 @@ func (o *object) Delete(arg *Argument) (Response, error) {
 	return response, nil
 }
 
+// MultipleDelete is a function that is used to delete multiple objects
 func (o *object) MultipleDelete(arg *Argument) (Response, error) {
 	var (
 		response = Response{
@@ -347,6 +359,7 @@ func (o *object) MultipleDelete(arg *Argument) (Response, error) {
 	return response, nil
 }
 
+// Send is a function that is used to Send logs to telegram bots
 func (o *object) Send(text string) error {
 	client := &http.Client{}
 
@@ -404,6 +417,7 @@ func DoRequest(url string, method string, body interface{}, appId string) ([]byt
 	return respByte, err
 }
 
+// Config is a function that returns reference to config field.
 func (o *object) Config() *Config {
 	return o.config
 }
