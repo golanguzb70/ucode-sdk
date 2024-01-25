@@ -359,6 +359,7 @@ func (o *object) Send(text string) error {
 			return err
 		}
 
+		
 		resp, err := client.Do(request)
 		if err != nil {
 			return err
