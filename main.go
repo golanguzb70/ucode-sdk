@@ -12,7 +12,7 @@ import (
 
 type UcodeApis interface {
 	/*
-		GetList is function that get list of objects from specific table using filter.
+		GetList is a function that gets list of objects from a specific table using filters.
 		This method works slower because it gets all the information
 		about the table, fields and view.
 		default_value:
@@ -21,14 +21,14 @@ type UcodeApis interface {
 	*/
 	GetList(arg *Argument) (GetListClientApiResponse, Response, error)
 	/*
-		GetSingle is function that get one object with all the information of fields, formulas, views and relations.
-		It is better to use GetSlim for better performance
+		GetSingle is a function that gets one object with all the information of fields, formulas, views and relations.
+		It is better to use GetSlim for a better performance
 
 		guid="your_guid"
 	*/
 	GetSingle(arg *Argument) (ClientApiResponse, Response, error)
 	/*
-		GetListSlim is function that get list of objects from specific table using filter.
+		GetListSlim is a function that gets list of objects from a specific table using filter.
 		This method works much lighter than GetList because it doesn't get all information about the table, fields and view.
 		default_value:
 			page = 1
@@ -36,19 +36,19 @@ type UcodeApis interface {
 	*/
 	GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error)
 	/*
-		GetSingleSlim is function that get one object with its fields.
+		GetSingleSlim is a function that gets one object with its fields.
 		It is light and fast to use.
 
 		guid="your_guid"
 	*/
 	GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error)
 	/*
-		CreateObject is a function that creates new object.
+		CreateObject is a function that creates a new object.
 
 	*/
 	CreateObject(arg *Argument) (Datas, Response, error)
 	/*
-		UpdateObject is a function that updates specific object
+		UpdateObject is a function that updates a specific object
 	*/
 	UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response, error)
 	/*
@@ -66,11 +66,11 @@ type UcodeApis interface {
 	*/
 	MultipleDelete(arg *Argument) (Response, error)
 	/*
-		Send is a function that is used to Send logs to telegram bots
+		Send is a function that is used to Send logs to the Telegram bots
 	*/
 	Send(text string) error
 	/*
-		Returns reference to config field.
+		Returns a reference to config field.
 	*/
 	Config() *Config
 }
@@ -372,9 +372,9 @@ func (o *object) Send(text string) error {
 
 /*
 DoRequest is a function to send http request easily
-It gets url, method, body, app_id(for ucode purpose) as paramters
+It gets url, method, body, app_id(for ucode purpose) as parameters
 
-Returns body of the response as array of bytes and error
+Returns body of the response as an array of bytes and error
 */
 func DoRequest(url string, method string, body interface{}, appId string) ([]byte, error) {
 	data, err := json.Marshal(&body)
