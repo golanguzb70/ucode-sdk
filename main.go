@@ -353,7 +353,7 @@ func (o *object) Send(text string) error {
 	text = o.config.TableSlug + " >>> " + time.Now().Format(time.RFC3339) + " >>> " + text
 
 	for _, e := range o.config.AccountIds {
-		botUrl := fmt.Sprintf("https://api.telegram.org/bot"+o.config.BotToken+"/sendMessage?chat_id="+e+"&text=%s", text)
+		botUrl := fmt.Sprintf("https://api.telegram.org/bot"+o.config.BotToken+"/sendMessage?chat_id="+e+"&text=%s", "```"+text+"```")
 		request, err := http.NewRequest("GET", botUrl, nil)
 		if err != nil {
 			return err
