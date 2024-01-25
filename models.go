@@ -19,7 +19,7 @@ type (
 		UserId     string                 `json:"user_id"`
 	}
 )
-
+ 
 // Response structures
 type (
 	// Create function response body >>>>> CREATE
