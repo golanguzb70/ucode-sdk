@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+
 type UcodeApis interface {
 	/*
 		GetList is function that get list of objects from specific table using filter.
