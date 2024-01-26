@@ -348,6 +348,51 @@ func (o *object) MultipleDelete(arg *Argument) (Response, error) {
 	return response, nil
 }
 
+func (o *object) GetListV2(arg *Argument) (GetListClientApiResponse, Response, error) {
+	var (
+		response      Response
+		getListObject GetListClientApiResponse
+		url           = fmt.Sprintf("%s/v2/object/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		page          int
+		limit         int
+	)
+
+	_, ok := arg.Request.Data.ObjectData["page"]
+	if ok {
+		page = arg.Request.Data.ObjectData["page"].(int)
+	}
+
+	_, ok = arg.Request.Data.ObjectData["limit"]
+	if ok {
+		limit = arg.Request.Data.ObjectData["limit"].(int)
+	}
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	arg.Request.Data.ObjectData["offset"] = (page - 1) * limit
+	arg.Request.Data.ObjectData["limit"] = limit
+
+	getListResponseInByte, err := DoRequest(url, "POST", arg.Request, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, err
+	}
+
+	err = json.Unmarshal(getListResponseInByte, &getListObject)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling get list object", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, errors.New("invalid response")
+	}
+
+	return getListObject, response, nil
+}
+
 func (o *object) Send(text string) error {
 	client := &http.Client{}
 
