@@ -404,6 +404,62 @@ func DoRequest(url string, method string, body interface{}, appId string) ([]byt
 	return respByte, err
 }
 
+func (o *object) GetListSlimV2(arg *Argument) (GetListClientApiResponse, Response, error) {
+	var (
+		response    Response
+		listSlim    GetListClientApiResponse
+		url         = fmt.Sprintf("%s/v2/object-slim/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		page, limit int
+	)
+
+	reqObject, err := json.Marshal(arg.Request.Data.ObjectData)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while marshalling request getting list slim object", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, err
+	}
+	_, ok := arg.Request.Data.ObjectData["page"]
+	if ok {
+		page = arg.Request.Data.ObjectData["page"].(int)
+	}
+
+	_, ok = arg.Request.Data.ObjectData["limit"]
+	if ok {
+		limit = arg.Request.Data.ObjectData["limit"].(int)
+	}
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	url = fmt.Sprintf("%s&data=%s&offset=%d&limit=%d", url, string(reqObject), (page-1)*limit, limit)
+
+	getListResponseInByte, err := DoRequest(url, "GET", nil, o.config.AppId)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, err
+	}
+
+	err = json.Unmarshal(getListResponseInByte, &listSlim)
+	if err != nil {
+		response.Data = map[string]interface{}{"message": "Error while unmarshalling get list object", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, errors.New("invalid response")
+	}
+
+	return listSlim, response, nil
+}
+
 func (o *object) Config() *Config {
 	return o.config
 }
