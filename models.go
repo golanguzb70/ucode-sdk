@@ -1,6 +1,14 @@
 package ucodesdk
 
 type (
+
+	// Function request body >>>>> UPDATE
+
+	RequestToUpdate struct {
+		Data        map[string]interface{} `json:"data"`
+		DisableFaas bool                   `json:"disable_faas"`
+	}
+
 	Request struct {
 		Data Data `json:"data"`
 	}
