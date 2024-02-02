@@ -5,9 +5,14 @@ type (
 		Data Data `json:"data"`
 	}
 
+	RequestUpdate struct {
+		Data map[string]interface{} `json:"data"`
+	}
+
 	Argument struct {
-		Request     Request `json:"request"`
-		DisableFaas bool    `json:"disable_faas"`
+		Request       Request       `json:"request"`
+		DisableFaas   bool          `json:"disable_faas"`
+		RequestUpdate RequestUpdate `json:"update_request"`
 	}
 
 	Data struct {
@@ -17,7 +22,6 @@ type (
 		ObjectIds  []string               `json:"object_ids"`
 		TableSlug  string                 `json:"table_slug"`
 		UserId     string                 `json:"user_id"`
-		Data       map[string]interface{} `json:"data"` // this is for update method
 	}
 )
 
