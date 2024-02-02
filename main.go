@@ -120,7 +120,7 @@ func (o *object) UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response,
 		url          = fmt.Sprintf("%s/v1/object/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
 	)
 
-	updateObjectResponseInByte, err := DoRequest(url, "PUT", arg.Request, o.config.AppId)
+	updateObjectResponseInByte, err := DoRequest(url, "PUT", arg.Request.Data.Data, o.config.AppId)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while updating object", "error": err.Error()}
 		response.Status = "error"

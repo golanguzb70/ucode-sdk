@@ -17,6 +17,7 @@ type (
 		ObjectIds  []string               `json:"object_ids"`
 		TableSlug  string                 `json:"table_slug"`
 		UserId     string                 `json:"user_id"`
+		Data       map[string]interface{} `json:"data"` // this is for update method
 	}
 )
 
