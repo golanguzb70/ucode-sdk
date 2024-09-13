@@ -1,25 +1,38 @@
 package ucodesdk
 
+import (
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/joho/godotenv"
+)
+
 type Config struct {
-	AppId      string
-	BaseURL    string
-	TableSlug  string
-	BotToken   string
-	AccountIds []string
+	appId          string
+	BaseURL        string
+	AccountIds     []string
+	FunctionName   string
+	RequestTimeout time.Duration
 }
 
-func (cfg *Config) SetAppId(appId string) {
-	cfg.AppId = appId
+func (cfg *Config) SetAppId() error {
+
+	err := godotenv.Load()
+	if err != nil {
+		return fmt.Errorf("error loading .env file")
+	}
+
+	// Get the APP_ID value from APP_ID variables
+	appId := os.Getenv("APP_ID")
+	if appId == "" {
+		return fmt.Errorf("APP_ID environment variable not set")
+	}
+
+	cfg.appId = appId
+	return nil
 }
 
 func (cfg *Config) SetBaseUrl(url string) {
 	cfg.BaseURL = url
-}
-
-func (cfg *Config) SetTableSlug(slug string) {
-	cfg.TableSlug = slug
-}
-
-func (cfg *Config) SetBotToken(token string) {
-	cfg.BotToken = token
 }

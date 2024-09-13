@@ -19,7 +19,7 @@ type UcodeApis interface {
 			page = 1
 			limit = 10
 	*/
-	GetList(arg *Argument) (GetListClientApiResponse, Response, error)
+	GetList(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error)
 	/*
 		GetSingle is function that get one object with all the information of fields, formulas, views and relations.
 		It is better to use GetSlim for better performance
@@ -34,7 +34,7 @@ type UcodeApis interface {
 			page = 1
 			limit = 10
 	*/
-	GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error)
+	GetListSlim(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error)
 	/*
 		GetSingleSlim is function that get one object with its fields.
 		It is light and fast to use.
@@ -42,6 +42,14 @@ type UcodeApis interface {
 		guid="your_guid"
 	*/
 	GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error)
+	/*
+		------------------------WRITE--------------------------------------------------------
+	*/
+	GetListAggregate(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error)
+	/*
+		------------------------WRITE--------------------------------------------------------
+	*/
+	GetListAggregation(arg *Argument) (GetListAggregationClientApiResponse, Response, error)
 	/*
 		CreateObject is a function that creates new object.
 
@@ -68,10 +76,6 @@ type UcodeApis interface {
 	/*
 		Send is a function that is used to Send logs to telegram bots
 	*/
-	Send(text string) error
-	/*
-		Returns reference to config field.
-	*/
 	Config() *Config
 }
 
@@ -91,10 +95,15 @@ func (o *object) CreateObject(arg *Argument) (Datas, Response, error) {
 			Status: "done",
 		}
 		createdObject Datas
-		url           = fmt.Sprintf("%s/v1/object/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		url           = fmt.Sprintf("%s/v2/items/%s?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.DisableFaas)
 	)
 
-	createObjectResponseInByte, err := DoRequest(url, "POST", arg.Request, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	createObjectResponseInByte, err := o.DoRequest(url, "POST", arg.Request, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Can't send request", "error": err.Error()}
 		response.Status = "error"
@@ -117,10 +126,15 @@ func (o *object) UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response,
 			Status: "done",
 		}
 		updateObject ClientApiUpdateResponse
-		url          = fmt.Sprintf("%s/v1/object/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		url          = fmt.Sprintf("%s/v2/items/%s?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.DisableFaas)
 	)
 
-	updateObjectResponseInByte, err := DoRequest(url, "PUT", arg.RequestUpdate, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	updateObjectResponseInByte, err := o.DoRequest(url, "PUT", arg.RequestUpdate, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while updating object", "error": err.Error()}
 		response.Status = "error"
@@ -143,9 +157,15 @@ func (o *object) MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse,
 			Status: "done",
 		}
 		multipleUpdateObject ClientApiMultipleUpdateResponse
-		url                  = fmt.Sprintf("%s/v1/object/multiple-update/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		url                  = fmt.Sprintf("%s/v2/items/multiple-update/%s?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.DisableFaas)
 	)
-	multipleUpdateObjectsResponseInByte, err := DoRequest(url, "PUT", arg.Request, o.config.AppId)
+
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	multipleUpdateObjectsResponseInByte, err := o.DoRequest(url, "PUT", arg.Request, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while multiple updating objects", "error": err.Error()}
 		response.Status = "error"
@@ -162,23 +182,21 @@ func (o *object) MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse,
 	return ClientApiMultipleUpdateResponse{}, response, nil
 }
 
-func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, error) {
+func (o *object) GetList(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error) {
 	var (
 		response      Response
 		getListObject GetListClientApiResponse
-		url           = fmt.Sprintf("%s/v1/object/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		url           = fmt.Sprintf("%s/v2/items/get-list/%s?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.DisableFaas)
 		page          int
 		limit         int
 	)
 
-	_, ok := arg.Request.Data.ObjectData["page"]
-	if ok {
-		page = arg.Request.Data.ObjectData["page"].(int)
+	if arg.Page > 0 {
+		page = arg.Page
 	}
 
-	_, ok = arg.Request.Data.ObjectData["limit"]
-	if ok {
-		limit = arg.Request.Data.ObjectData["limit"].(int)
+	if arg.Limit > 0 {
+		limit = arg.Limit
 	}
 	if page <= 0 {
 		page = 1
@@ -190,7 +208,12 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 	arg.Request.Data.ObjectData["offset"] = (page - 1) * limit
 	arg.Request.Data.ObjectData["limit"] = limit
 
-	getListResponseInByte, err := DoRequest(url, "POST", arg.Request, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	getListResponseInByte, err := o.DoRequest(url, "POST", arg.Request, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
 		response.Status = "error"
@@ -207,11 +230,11 @@ func (o *object) GetList(arg *Argument) (GetListClientApiResponse, Response, err
 	return getListObject, response, nil
 }
 
-func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response, error) {
+func (o *object) GetListSlim(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error) {
 	var (
 		response    Response
 		listSlim    GetListClientApiResponse
-		url         = fmt.Sprintf("%s/v1/object-slim/get-list/%s?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		url         = fmt.Sprintf("%s/v1/object-slim/get-list/%s?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.DisableFaas)
 		page, limit int
 	)
 
@@ -221,20 +244,13 @@ func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response,
 		response.Status = "error"
 		return GetListClientApiResponse{}, response, err
 	}
-	_, ok := arg.Request.Data.ObjectData["page"]
-	if ok {
-		page = arg.Request.Data.ObjectData["page"].(int)
+
+	if arg.Page > 0 {
+		page = arg.Page
 	}
 
-	_, ok = arg.Request.Data.ObjectData["limit"]
-	if ok {
-		limit = arg.Request.Data.ObjectData["limit"].(int)
-	}
-	if page <= 0 {
-		page = 1
-	}
-	if limit <= 0 {
-		limit = 10
+	if arg.Limit > 0 {
+		limit = arg.Limit
 	}
 
 	if page <= 0 {
@@ -246,7 +262,12 @@ func (o *object) GetListSlim(arg *Argument) (GetListClientApiResponse, Response,
 
 	url = fmt.Sprintf("%s&data=%s&offset=%d&limit=%d", url, string(reqObject), (page-1)*limit, limit)
 
-	getListResponseInByte, err := DoRequest(url, "GET", nil, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	getListResponseInByte, err := o.DoRequest(url, "GET", nil, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
 		response.Status = "error"
@@ -267,10 +288,15 @@ func (o *object) GetSingle(arg *Argument) (ClientApiResponse, Response, error) {
 	var (
 		response  Response
 		getObject ClientApiResponse
-		url       = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
+		url       = fmt.Sprintf("%s/v2/items/%s/%v?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
 	)
 
-	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	resByte, err := o.DoRequest(url, "GET", nil, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
 		response.Status = "error"
@@ -291,10 +317,15 @@ func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, erro
 	var (
 		response  Response
 		getObject ClientApiResponse
-		url       = fmt.Sprintf("%s/v1/object-slim/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
+		url       = fmt.Sprintf("%s/v1/object-slim/%s/%v?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
 	)
 
-	resByte, err := DoRequest(url, "GET", nil, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	resByte, err := o.DoRequest(url, "GET", nil, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Can't sent request", "error": err.Error()}
 		response.Status = "error"
@@ -311,15 +342,89 @@ func (o *object) GetSingleSlim(arg *Argument) (ClientApiResponse, Response, erro
 	return getObject, response, nil
 }
 
+func (o *object) GetListAggregate(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error) {
+	var (
+		response         Response
+		getListAggregate GetListClientApiResponse
+		url              = fmt.Sprintf("%s/v2/items/get-list-aggregate/%s?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.DisableFaas)
+		page, limit      int
+	)
+
+	if arg.Limit > 0 {
+		limit = arg.Limit
+		url = fmt.Sprintf("%s&limit=%d", url, limit)
+	}
+
+	if arg.Page > 0 {
+		page = arg.Page
+		url = fmt.Sprintf("%s&offset=%d", url, (page-1)*limit)
+	}
+
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	getListAggregateResponseInByte, err := o.DoRequest(url, "POST", arg.Request, appId, nil)
+	if err != nil {
+		response.Data = map[string]interface{}{"description": string(getListAggregateResponseInByte), "message": "Can't sent request", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, err
+	}
+
+	err = json.Unmarshal(getListAggregateResponseInByte, &getListAggregate)
+	if err != nil {
+		response.Data = map[string]interface{}{"description": string(getListAggregateResponseInByte), "message": "Error while unmarshalling get list object", "error": err.Error()}
+		response.Status = "error"
+		return GetListClientApiResponse{}, response, err
+	}
+
+	return getListAggregate, response, nil
+}
+
+func (o *object) GetListAggregation(arg *Argument) (GetListAggregationClientApiResponse, Response, error) {
+	var (
+		response           Response
+		getListAggregation GetListAggregationClientApiResponse
+		url                = fmt.Sprintf("%s/v2/items/%s/aggregation", o.config.BaseURL, arg.TableSlug)
+	)
+
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	getListAggregationResponseInByte, err := o.DoRequest(url, "POST", arg.Request, appId, nil)
+	if err != nil {
+		response.Data = map[string]interface{}{"description": string(getListAggregationResponseInByte), "message": "Can't sent request", "error": err.Error()}
+		response.Status = "error"
+		return GetListAggregationClientApiResponse{}, response, err
+	}
+
+	err = json.Unmarshal(getListAggregationResponseInByte, &getListAggregation)
+	if err != nil {
+		response.Data = map[string]interface{}{"description": string(getListAggregationResponseInByte), "message": "Error while unmarshalling get list object", "error": err.Error()}
+		response.Status = "error"
+		return GetListAggregationClientApiResponse{}, response, err
+	}
+
+	return getListAggregation, response, nil
+}
+
 func (o *object) Delete(arg *Argument) (Response, error) {
 	var (
 		response = Response{
 			Status: "done",
 		}
-		url = fmt.Sprintf("%s/v1/object/%s/%v?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
+		url = fmt.Sprintf("%s/v2/items/%s/%v?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.Request.Data.ObjectData["guid"], arg.DisableFaas)
 	)
 
-	_, err := DoRequest(url, "DELETE", nil, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	_, err := o.DoRequest(url, "DELETE", nil, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while deleting object", "error": err.Error()}
 		response.Status = "error"
@@ -334,10 +439,15 @@ func (o *object) MultipleDelete(arg *Argument) (Response, error) {
 		response = Response{
 			Status: "done",
 		}
-		url = fmt.Sprintf("%s/v1/object/%s/?from-ofs=%t", o.config.BaseURL, o.config.TableSlug, arg.DisableFaas)
+		url = fmt.Sprintf("%s/v2/items/%s/?from-ofs=%t", o.config.BaseURL, arg.TableSlug, arg.DisableFaas)
 	)
 
-	_, err := DoRequest(url, "DELETE", arg.Request.Data.ObjectData, o.config.AppId)
+	var appId = o.config.appId
+	if arg.AppId != "" {
+		appId = arg.AppId
+	}
+
+	_, err := o.DoRequest(url, "DELETE", arg.Request.Data.ObjectData, appId, nil)
 	if err != nil {
 		response.Data = map[string]interface{}{"message": "Error while deleting objects", "error": err.Error()}
 		response.Status = "error"
@@ -347,43 +457,21 @@ func (o *object) MultipleDelete(arg *Argument) (Response, error) {
 	return response, nil
 }
 
-func (o *object) Send(text string) error {
-	client := &http.Client{}
-
-	text = o.config.TableSlug + " >>> " + time.Now().Format(time.RFC3339) + " >>> " + text
-
-	for _, e := range o.config.AccountIds {
-		botUrl := fmt.Sprintf("https://api.telegram.org/bot"+o.config.BotToken+"/sendMessage?chat_id="+e+"&text=%s", text)
-		request, err := http.NewRequest("GET", botUrl, nil)
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.Do(request)
-		if err != nil {
-			return err
-		}
-
-		resp.Body.Close()
-	}
-
-	return nil
-}
-
 /*
 DoRequest is a function to send http request easily
 It gets url, method, body, app_id(for ucode purpose) as paramters
 
 Returns body of the response as array of bytes and error
 */
-func DoRequest(url string, method string, body interface{}, appId string) ([]byte, error) {
+func (o *object) DoRequest(url string, method string, body interface{}, appId string, headers map[string]string) ([]byte, error) {
 	data, err := json.Marshal(&body)
 	if err != nil {
 		return nil, err
 	}
 
-	client := &http.Client{
-		Timeout: time.Duration(5 * time.Second),
+	client := &http.Client{}
+	if o.config.RequestTimeout > 0 {
+		client.Timeout = time.Duration(5 * time.Second)
 	}
 
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(data))
@@ -393,6 +481,11 @@ func DoRequest(url string, method string, body interface{}, appId string) ([]byt
 
 	request.Header.Add("authorization", "API-KEY")
 	request.Header.Add("X-API-KEY", appId)
+
+	// Add headers from the map
+	for key, value := range headers {
+		request.Header.Add(key, value)
+	}
 
 	resp, err := client.Do(request)
 	if err != nil {

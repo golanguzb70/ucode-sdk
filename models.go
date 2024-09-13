@@ -10,9 +10,21 @@ type (
 	}
 
 	Argument struct {
+		AppId         string        `json:"app_id"`
+		TableSlug     string        `json:"table_slug"`
 		Request       Request       `json:"request"`
 		DisableFaas   bool          `json:"disable_faas"`
 		RequestUpdate RequestUpdate `json:"update_request"`
+	}
+
+	ArgumentWithPegination struct {
+		AppId         string        `json:"app_id"`
+		TableSlug     string        `json:"table_slug"`
+		Request       Request       `json:"request"`
+		DisableFaas   bool          `json:"disable_faas"`
+		RequestUpdate RequestUpdate `json:"update_request"`
+		Limit         int           `json:"limit"`
+		Page          int           `json:"page"`
 	}
 
 	Data struct {
@@ -66,6 +78,14 @@ type (
 
 	GetListClientApiResp struct {
 		Response []map[string]interface{} `json:"response"`
+	}
+	// GetListAggregationClientApiResponse  This is get list aggregation response
+	GetListAggregationClientApiResponse struct {
+		Data struct {
+			Data struct {
+				Data []map[string]interface{} `json:"data"`
+			} `json:"data"`
+		} `json:"data"`
 	}
 
 	// ClientApiUpdateResponse This is single update api response >>>>> UPDATE
