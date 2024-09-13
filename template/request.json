@@ -1,0 +1,9 @@
+{
+    "data": {
+        "object_data": {
+            "name": "house_1",
+            "price": 15000,
+            "room_count": 5
+        }
+    }
+}

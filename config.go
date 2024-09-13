@@ -11,13 +11,11 @@ import (
 type Config struct {
 	appId          string
 	BaseURL        string
-	AccountIds     []string
 	FunctionName   string
 	RequestTimeout time.Duration
 }
 
 func (cfg *Config) SetAppId() error {
-
 	err := godotenv.Load()
 	if err != nil {
 		return fmt.Errorf("error loading .env file")
@@ -30,6 +28,7 @@ func (cfg *Config) SetAppId() error {
 	}
 
 	cfg.appId = appId
+	// fmt.Println(cfg.appId)
 	return nil
 }
 

@@ -2,29 +2,23 @@ package ucodesdk
 
 type (
 	Request struct {
-		Data Data `json:"data"`
-	}
-
-	RequestUpdate struct {
 		Data map[string]interface{} `json:"data"`
 	}
 
 	Argument struct {
-		AppId         string        `json:"app_id"`
-		TableSlug     string        `json:"table_slug"`
-		Request       Request       `json:"request"`
-		DisableFaas   bool          `json:"disable_faas"`
-		RequestUpdate RequestUpdate `json:"update_request"`
+		AppId       string  `json:"app_id"`
+		TableSlug   string  `json:"table_slug"`
+		Request     Request `json:"request"`
+		DisableFaas bool    `json:"disable_faas"`
 	}
 
 	ArgumentWithPegination struct {
-		AppId         string        `json:"app_id"`
-		TableSlug     string        `json:"table_slug"`
-		Request       Request       `json:"request"`
-		DisableFaas   bool          `json:"disable_faas"`
-		RequestUpdate RequestUpdate `json:"update_request"`
-		Limit         int           `json:"limit"`
-		Page          int           `json:"page"`
+		AppId       string  `json:"app_id"`
+		TableSlug   string  `json:"table_slug"`
+		Request     Request `json:"request"`
+		DisableFaas bool    `json:"disable_faas"`
+		Limit       int     `json:"limit"`
+		Page        int     `json:"page"`
 	}
 
 	Data struct {
@@ -109,7 +103,10 @@ type (
 		} `json:"data"`
 	}
 
-	ResponseStatus struct {
-		Status string `json:"status"`
+	ResponseError struct {
+		StatusCode         int
+		Description        interface{}
+		ErrorMessage       string
+		ClientErrorMessage string
 	}
 )
