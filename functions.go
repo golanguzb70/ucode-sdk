@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
 
 type UcodeApis interface {
@@ -14,7 +13,7 @@ type UcodeApis interface {
 		CreateObject is a function that creates new object.
 
 	*/
-	CreateObject(arg *Argument) (Datas, Response, error) //✅
+	CreateObject(arg *Argument) (Datas, Response, error)
 	/*
 		GetList is function that get list of objects from specific table using filter.
 		This method works slower because it gets all the information
@@ -23,14 +22,14 @@ type UcodeApis interface {
 			page = 1
 			limit = 10
 	*/
-	GetList(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error) //✅
+	GetList(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error)
 	/*
 		GetSingle is function that get one object with all the information of fields, formulas, views and relations.
 		It is better to use GetSlim for better performance
 
 		guid="your_guid"
 	*/
-	GetSingle(arg *Argument) (ClientApiResponse, Response, error) //✅
+	GetSingle(arg *Argument) (ClientApiResponse, Response, error)
 	/*
 		GetListSlim is function that get list of objects from specific table using filter.
 		This method works much lighter than GetList because it doesn't get all information about the table, fields and view.
@@ -38,14 +37,14 @@ type UcodeApis interface {
 			page = 1
 			limit = 10
 	*/
-	GetListSlim(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error) //✅
+	GetListSlim(arg *ArgumentWithPegination) (GetListClientApiResponse, Response, error)
 	/*
 		GetSingleSlim is function that get one object with its fields.
 		It is light and fast to use.
 
 		guid="your_guid"
 	*/
-	GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error) //✅
+	GetSingleSlim(arg *Argument) (ClientApiResponse, Response, error)
 	/*
 		GetListAggregation is function that get list of objects with its fields (not include relational data)
 		from specific table using filter which you give.
@@ -54,33 +53,43 @@ type UcodeApis interface {
 
 		pipelines=[]map[string]interface{}{} as filter
 	*/
-	GetListAggregation(arg *Argument) (GetListAggregationClientApiResponse, Response, error) //✅
+	GetListAggregation(arg *Argument) (GetListAggregationClientApiResponse, Response, error)
 	/*
 		UpdateObject is a function that updates specific object
 	*/
-	UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response, error) //✅
+	UpdateObject(arg *Argument) (ClientApiUpdateResponse, Response, error)
 	/*
 		MultipleUpdate is a function that updates multiple objects at once
 	*/
-	MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse, Response, error) //✅
+	MultipleUpdate(arg *Argument) (ClientApiMultipleUpdateResponse, Response, error)
 	/*
 		Delete is a function that is used to delete one object
 		map[guid]="actual_guid"
 	*/
-	Delete(arg *Argument) (Response, error) //✅
+	Delete(arg *Argument) (Response, error)
 	/*
 		MultipleDelete is a function that is used to delete multiple objects
 		map[ids]=[list of ids]
 	*/
-	MultipleDelete(arg *Argument) (Response, error) //✅
+	MultipleDelete(arg *Argument) (Response, error)
 	/*
-		------------------------WRITE--------------------------------------------------------
+		AppendManyToMany is a function that is used to append to a field which referenced many-to-many
+
+		"table_from": "table_name",		// main table
+		"table_to":   "table_name",		// relation table
+		"id_from":    "table_id", 		// main table id
+		"id_to":      "table_id",		// relation table id
 	*/
-	AppendManyToMany(arg *Argument) (Response, error) //✅
+	AppendManyToMany(arg *Argument) (Response, error)
 	/*
-		------------------------WRITE--------------------------------------------------------
+		AppendManyToMany is a function that is used to delete from a field which referenced many-to-many
+
+		"table_from": "table_name",		// main table
+		"table_to":   "table_name",		// relation table
+		"id_from":    "table_id", 		// main table id
+		"id_to":      "table_id",		// relation table id
 	*/
-	DeleteManyToMany(arg *Argument) (Response, error) //✅
+	DeleteManyToMany(arg *Argument) (Response, error)
 
 	Config() *Config
 
@@ -521,7 +530,7 @@ func (o *object) DoRequest(url string, method string, body interface{}, appId st
 
 	client := &http.Client{}
 	if o.config.RequestTimeout > 0 {
-		client.Timeout = time.Duration(5 * time.Second)
+		client.Timeout = o.config.RequestTimeout
 	}
 
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(data))

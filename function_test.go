@@ -3,6 +3,7 @@ package ucodesdk
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -30,8 +31,14 @@ func TestEndToEnd(t *testing.T) {
 		houses []map[string]interface{}
 		rooms  []map[string]interface{}
 	)
-	// set timeout for request
-	ucodeApi.Config().RequestTimeout = time.Duration(30 * time.Second)
+	// Test Config
+	t.Run("Config", func(t *testing.T) {
+		ucodeApi.Config().RequestTimeout = time.Duration(30 * time.Second)
+		ucodeApi.Config().SetBaseUrl(baseUrl)
+		if err := ucodeApi.Config().SetAppId(); err != nil {
+			t.Errorf("Error setting app_id: %v", err)
+		}
+	})
 
 	// set base url
 	ucodeApi.Config().SetBaseUrl(baseUrl)
@@ -107,6 +114,17 @@ func TestEndToEnd(t *testing.T) {
 	response.Data = map[string]interface{}{"result": ExistObject}
 	houses = ExistObject.Data.Data.Response
 
+	// Test with invalid parameters
+	_, _, err = ucodeApi.GetList(&ArgumentWithPegination{
+		TableSlug: "invalid_table",
+		Request:   Request{Data: map[string]interface{}{}},
+		Limit:     -1,
+		Page:      -1,
+	})
+	if err == nil {
+		t.Error("Expected error for invalid parameters, got nil")
+	}
+
 	// --------------------------GetListSlim------------------------------
 	getListSlimReq := Request{Data: map[string]interface{}{}}
 	getListSlim, response, err := ucodeApi.GetListSlim(&ArgumentWithPegination{
@@ -124,6 +142,17 @@ func TestEndToEnd(t *testing.T) {
 	}
 	response.Data = map[string]interface{}{"result": getListSlim}
 	rooms = getListSlim.Data.Data.Response
+
+	// Test with invalid parameters
+	_, _, err = ucodeApi.GetListSlim(&ArgumentWithPegination{
+		TableSlug: "invalid_table",
+		Request:   getListSlimReq,
+		Limit:     -1,
+		Page:      -1,
+	})
+	if err == nil {
+		t.Error("Expected error for invalid parameters, got nil")
+	}
 
 	// --------------------------UpdateObject------------------------------
 	// update first house
@@ -149,6 +178,16 @@ func TestEndToEnd(t *testing.T) {
 		t.Error(returnError(errorResponse))
 	}
 
+	// Test with invalid parameters
+	_, _, err = ucodeApi.UpdateObject(&Argument{
+		DisableFaas: true,
+		TableSlug:   "invalid_table",
+		Request:     Request{Data: map[string]interface{}{"guid": "invalid_guid"}},
+	})
+	if err == nil {
+		t.Error("Expected error for invalid parameters, got nil")
+	}
+
 	// --------------------------GetSingle------------------------------
 	// get the house info
 	houseInfo, response, err := ucodeApi.GetSingle(&Argument{
@@ -164,6 +203,16 @@ func TestEndToEnd(t *testing.T) {
 		t.Error(returnError(errorResponse))
 	}
 	response.Data = map[string]interface{}{"result": houseInfo}
+
+	// Test with invalid parameters
+	_, _, err = ucodeApi.GetSingle(&Argument{
+		TableSlug:   "invalid_table",
+		Request:     Request{Data: map[string]interface{}{"guid": "invalid_guid"}},
+		DisableFaas: true,
+	})
+	if err == nil {
+		t.Error("Expected error for invalid parameters, got nil")
+	}
 
 	// --------------------------MultipleUpdate------------------------------
 	var (
@@ -188,6 +237,16 @@ func TestEndToEnd(t *testing.T) {
 		errorResponse.ErrorMessage = err.Error()
 		errorResponse.StatusCode = http.StatusInternalServerError
 		t.Error(returnError(errorResponse))
+	}
+
+	// Test with invalid parameters
+	_, _, err = ucodeApi.MultipleUpdate(&Argument{
+		DisableFaas: true,
+		TableSlug:   "",
+		Request:     Request{Data: map[string]interface{}{"objects": []map[string]interface{}{}}},
+	})
+	if err == nil {
+		t.Error("Expected error for invalid parameters, got nil")
 	}
 
 	// // --------------------------GetListAggregation FOR MongoDB------------------------------
@@ -251,6 +310,16 @@ func TestEndToEnd(t *testing.T) {
 		t.Error(returnError(errorResponse))
 	}
 	response.Data = map[string]interface{}{"result": courseResponse}
+
+	// Test with invalid parameters
+	_, _, err = ucodeApi.GetSingleSlim(&Argument{
+		DisableFaas: true,
+		TableSlug:   "invalid_table",
+		Request:     Request{Data: map[string]interface{}{"guid": "invalid_guid"}},
+	})
+	if err == nil {
+		t.Error("Expected error for invalid parameters, got nil")
+	}
 
 	// --------------------------DeleteManyToMany------------------------------
 	for i := 0; i < 2; i++ {
@@ -321,5 +390,79 @@ func TestEndToEnd(t *testing.T) {
 		errorResponse.ErrorMessage = err.Error()
 		errorResponse.StatusCode = http.StatusInternalServerError
 		t.Error(returnError(errorResponse))
+	}
+}
+
+func TestDoRequest(t *testing.T) {
+	ucodeApi := New(&Config{BaseURL: baseUrl, FunctionName: functionName})
+
+	// Test successful request
+	_, err := ucodeApi.DoRequest(baseUrl+"/test", "GET", nil, "test_app_id", nil)
+	if err != nil {
+		t.Errorf("Error on DoRequest: %v", err)
+	}
+
+	// Test with invalid URL
+	_, err = ucodeApi.DoRequest("invalid-url", "GET", nil, "test_app_id", nil)
+	if err == nil {
+		t.Error("Expected error for invalid URL, got nil")
+	}
+
+	// Test with custom headers
+	customHeaders := map[string]string{
+		"Custom-Header": "TestValue",
+	}
+	_, err = ucodeApi.DoRequest(baseUrl+"/test", "GET", nil, "test_app_id", customHeaders)
+	if err != nil {
+		t.Errorf("Error on DoRequest with custom headers: %v", err)
+	}
+
+	// Test with request timeout
+	ucodeApi.Config().RequestTimeout = time.Duration(1 * time.Nanosecond)
+	_, err = ucodeApi.DoRequest(baseUrl+"/test", "GET", nil, "test_app_id", nil)
+	if err == nil {
+		t.Error("Expected timeout error, got nil")
+	}
+}
+
+func TestConfigMethods(t *testing.T) {
+	// Create a new Config object for testing
+	cfg := &Config{BaseURL: baseUrl, FunctionName: functionName}
+	ucodeApi := New(cfg)
+
+	// Test SetBaseUrl
+	newBaseURL := "https://new.api.example.com"
+	ucodeApi.Config().SetBaseUrl(newBaseURL)
+	if ucodeApi.Config().BaseURL != newBaseURL {
+		t.Errorf("SetBaseUrl failed, expected %s, got %s", newBaseURL, ucodeApi.Config().BaseURL)
+	}
+
+	// Backup the current value of APP_ID to restore it after the test
+	originalAppID, exists := os.LookupEnv("APP_ID")
+
+	// Ensure we clean up the environment variable at the end
+	defer func() {
+		if exists {
+			os.Setenv("APP_ID", originalAppID)
+		} else {
+			os.Unsetenv("APP_ID")
+		}
+	}()
+
+	// Test SetAppId with APP_ID set
+	os.Setenv("APP_ID", "test_app_id")
+	err := ucodeApi.Config().SetAppId()
+	if err != nil {
+		t.Errorf("SetAppId failed: %v", err)
+	}
+	if ucodeApi.Config().appId != "test_app_id" {
+		t.Errorf("SetAppId failed, expected test_app_id, got %s", ucodeApi.Config().appId)
+	}
+
+	// Test SetAppId with APP_ID unset
+	os.Setenv("APP_ID", "") // set the APP_ID environment variable
+	err = ucodeApi.Config().SetAppId()
+	if err == nil {
+		t.Error("Expected error for missing APP_ID environment variable, got nil")
 	}
 }
