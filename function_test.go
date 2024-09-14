@@ -61,7 +61,7 @@ func TestEndToEnd(t *testing.T) {
 
 	for i := 0; i < 2; i++ {
 		_, _, err := ucodeApi.CreateObject(&Argument{DisableFaas: true, TableSlug: "houses", Request: Request{Data: createHousesRequest}})
-		if err == nil {
+		if err != nil {
 			errorResponse.Description = response.Data["description"]
 			errorResponse.ClientErrorMessage = "error on creating new hourse"
 			errorResponse.ErrorMessage = err.Error()
