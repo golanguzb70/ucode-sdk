@@ -96,6 +96,99 @@ if err != nil {
 fmt.Printf("Retrieved objects: %+v\n", objectList)
 ```
 
+#### Get List Slim
+
+To retrieve a list of objects with selected relations:
+
+```go
+listSlimRequest := ucodesdk.Request{
+    Data: map[string]interface{}{
+        "with_relations": true,
+        "selected_relations": []string{"related_table"},
+    },
+}
+
+objectListSlim, response, err := ucodeApi.GetListSlim(&ucodesdk.ArgumentWithPegination{
+    TableSlug:   "your_table_slug",
+    Request:     listSlimRequest,
+    DisableFaas: true,
+    Limit:       10,
+    Page:        1,
+})
+if err != nil {
+    log.Fatalf("Error retrieving slim object list: %v", err)
+}
+
+fmt.Printf("Retrieved slim objects: %+v\n", objectListSlim)
+```
+
+#### Get Single Slim
+
+To retrieve a single object with selected relations:
+
+```go
+singleSlimRequest := ucodesdk.Request{
+    Data: map[string]interface{}{
+        "guid": "object_guid",
+        "with_relations": true,
+        "selected_relations": []string{"related_table"},
+    },
+}
+
+singleSlimObject, response, err := ucodeApi.GetSingleSlim(&ucodesdk.Argument{
+    TableSlug:   "your_table_slug",
+    Request:     singleSlimRequest,
+    DisableFaas: true,
+})
+if err != nil {
+    log.Fatalf("Error retrieving single slim object: %v", err)
+}
+
+fmt.Printf("Retrieved slim object: %+v\n", singleSlimObject)
+```
+
+#### Get List Aggregation
+
+To perform an aggregation query (MongoDB only):
+
+```go
+aggregationPipeline := []map[string]interface{}{
+    {
+        "$match": map[string]interface{}{
+            "field": map[string]interface{}{
+                "$exists": true,
+                "$eq":     "value",
+            },
+        },
+    },
+    {
+        "$group": map[string]interface{}{
+            "_id": "$group_field",
+            "count": map[string]interface{}{
+                "$sum": 1,
+            },
+        },
+    },
+}
+
+aggregationRequest := ucodesdk.Request{
+    Data: map[string]interface{}{
+        "pipelines": aggregationPipeline,
+    },
+}
+
+aggregationResult, response, err := ucodeApi.GetListAggregation(&ucodesdk.Argument{
+    TableSlug:   "your_table_slug",
+    Request:     aggregationRequest,
+    DisableFaas: true,
+})
+if err != nil {
+    log.Fatalf("Error performing aggregation: %v", err)
+}
+
+fmt.Printf("Aggregation result: %+v\n", aggregationResult)
+```
+
 #### Get Single Object
 
 ```go
