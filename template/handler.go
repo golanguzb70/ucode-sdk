@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	sdk "github.com/golanguzb70/ucode-sdk"
 )
@@ -45,17 +46,11 @@ func Handle() http.HandlerFunc {
 				return string(marshaledResponse)
 			}
 		)
-		// // set timeout for request
-		// ucodeApi.Config().RequestTimeout = time.Duration(30 * time.Second)
+		// set timeout for request
+		ucodeApi.Config().RequestTimeout = time.Duration(30 * time.Second)
 
 		// set app_id from .env file
-		if err := ucodeApi.Config().SetAppId(); err != nil {
-			errorResponse.ClientErrorMessage = "Error on setting app_id from .env file"
-			errorResponse.ErrorMessage = err.Error()
-			errorResponse.StatusCode = http.StatusInternalServerError
-			handleResponse(w, returnError(errorResponse), http.StatusInternalServerError)
-			return
-		}
+		ucodeApi.Config().AppId = ""
 
 		requestByte, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -188,16 +183,16 @@ func Handle() http.HandlerFunc {
 		// // --------------------------UpdateObject------------------------------
 		// updateStudent := sdk.Request{
 		// 	Data: map[string]interface{}{
-		// 		"guid":       "bf4061fc-f73d-4ecf-bb80-28b9b8a84e13",
-		// 		"name":       "house_13",
-		// 		"price":      15000,
-		// 		"room_count": 1,
+		// 		"guid": "a3211725-c7e4-4e34-9375-dafef86e01c3",
+		// 		// "name":       "house_13",
+		// 		// "price":      15000,
+		// 		"room_count": 10,
 		// 	},
 		// }
 		// _, response, err = ucodeApi.UpdateObject(&sdk.Argument{
-		// 	DisableFaas: true,
 		// 	TableSlug:   "houses",
 		// 	Request:     updateStudent,
+		// 	DisableFaas: true,
 		// })
 		// if err != nil {
 		// 	errorResponse.Description = response.Data["description"]
@@ -343,57 +338,3 @@ func handleResponse(w http.ResponseWriter, body interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
 	w.Write(bodyByte)
 }
-
-// // Testing types
-// type (
-// 	Asserts struct {
-// 		Request  ucodesdk.Request
-// 		Response ucodesdk.Response
-// 	}
-
-// 	FunctionAssert struct{}
-// )
-
-// func (f FunctionAssert) GetAsserts() []Asserts {
-// 	return []Asserts{
-// 		{
-// 			Request: ucodesdk.Request{
-// 				Data: ucodesdk.Data{
-// 					ObjectData: map[string]interface{}{
-// 						"guid":    "ded64958-8a89-4587-9263-426d0605c054",
-// 						"field_1": "Hello",
-// 					},
-// 				},
-// 			},
-// 			Response: ucodesdk.Response{
-// 				Status: "done",
-// 			},
-// 		},
-// 		{
-// 			Request: ucodesdk.Request{
-// 				Data: ucodesdk.Data{
-// 					ObjectData: map[string]interface{}{
-// 						"guid": "ded64958-8a89-4587-9263-426d0605c054",
-// 					},
-// 				},
-// 			},
-// 			Response: ucodesdk.Response{Status: "error"},
-// 		},
-// 	}
-// }
-
-// func (f FunctionAssert) GetBenchmarkRequest() Asserts {
-// 	return Asserts{
-// 		Request: ucodesdk.Request{
-// 			Data: ucodesdk.Data{
-// 				ObjectData: map[string]interface{}{
-// 					"guid":    "ded64958-8a89-4587-9263-426d0605c054",
-// 					"field_1": "Hello",
-// 				},
-// 			},
-// 		},
-// 		Response: ucodesdk.Response{
-// 			Status: "done",
-// 		},
-// 	}
-// }
