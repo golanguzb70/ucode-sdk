@@ -6,13 +6,9 @@ on:
       - "*"
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
-
-    env:
-      MONGO_APP_ID: ${{ secrets.MONGO_APP_ID }}
-      POSTGRES_APP_ID: ${{ secrets.POSTGRES_APP_ID }}
-
+    environment: configs
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -27,3 +23,6 @@ jobs:
 
       - name: Run Tests
         run: go test -v ./...
+
+      - name: Access secrets
+        run: echo "MONGO_APP_ID=${{ secrets.MONGO_APP_ID }} POSTGRES_APP_ID=${{ secrets.POSTGRES_APP_ID }}"
