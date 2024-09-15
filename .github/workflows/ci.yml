@@ -1,10 +1,8 @@
 name: Run Tests on Push
-
 on:
   push:
     branches:
       - "*"
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -12,17 +10,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
+      
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: "1.22"
-
+      
       - name: Install dependencies
         run: go mod download
-
+      
+      - name: Create temporary .env file
+        run: |
+          echo "MONGO_APP_ID=${{ secrets.MONGO_APP_ID }}" > .env
+          echo "POSTGRES_APP_ID=${{ secrets.POSTGRES_APP_ID }}" >> .env
+      
       - name: Run Tests
         run: go test -v ./...
-
-      - name: Access secrets
-        run: echo "MONGO_APP_ID=${{ secrets.MONGO_APP_ID }} POSTGRES_APP_ID=${{ secrets.POSTGRES_APP_ID }}"
+      
+      - name: Remove temporary .env file
+        if: always()
+        run: rm -f .env
