@@ -9,6 +9,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      MONGO_APP_ID: ${{ secrets.MONGO_APP_ID }}
+      POSTGRES_APP_ID: ${{ secrets.POSTGRES_APP_ID }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
