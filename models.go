@@ -2,17 +2,23 @@ package ucodesdk
 
 type (
 	Request struct {
-		Data Data `json:"data"`
-	}
-
-	RequestUpdate struct {
 		Data map[string]interface{} `json:"data"`
 	}
 
 	Argument struct {
-		Request       Request       `json:"request"`
-		DisableFaas   bool          `json:"disable_faas"`
-		RequestUpdate RequestUpdate `json:"update_request"`
+		AppId       string  `json:"app_id"`
+		TableSlug   string  `json:"table_slug"`
+		Request     Request `json:"request"`
+		DisableFaas bool    `json:"disable_faas"`
+	}
+
+	ArgumentWithPegination struct {
+		AppId       string  `json:"app_id"`
+		TableSlug   string  `json:"table_slug"`
+		Request     Request `json:"request"`
+		DisableFaas bool    `json:"disable_faas"`
+		Limit       int     `json:"limit"`
+		Page        int     `json:"page"`
 	}
 
 	Data struct {
@@ -67,6 +73,14 @@ type (
 	GetListClientApiResp struct {
 		Response []map[string]interface{} `json:"response"`
 	}
+	// GetListAggregationClientApiResponse  This is get list aggregation response
+	GetListAggregationClientApiResponse struct {
+		Data struct {
+			Data struct {
+				Data []map[string]interface{} `json:"data"`
+			} `json:"data"`
+		} `json:"data"`
+	}
 
 	// ClientApiUpdateResponse This is single update api response >>>>> UPDATE
 	ClientApiUpdateResponse struct {
@@ -89,7 +103,10 @@ type (
 		} `json:"data"`
 	}
 
-	ResponseStatus struct {
-		Status string `json:"status"`
+	ResponseError struct {
+		StatusCode         int
+		Description        interface{}
+		ErrorMessage       string
+		ClientErrorMessage string
 	}
 )
