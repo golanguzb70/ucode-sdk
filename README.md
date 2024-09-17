@@ -1,5 +1,4 @@
 # UCode SDK
-
 UCode SDK is a Go package that provides a simple and efficient way to interact with the UCode API. This SDK offers various methods to perform CRUD operations, manage relationships, and handle data retrieval from the UCode platform.
 
 ## Table of Contents
@@ -20,7 +19,7 @@ UCode SDK is a Go package that provides a simple and efficient way to interact w
 To install the UCode SDK, use the following command:
 
 ```bash
-go get github.com/SaidakbarPardaboyev/ucode-sdk
+go get github.com/golanguzb70/ucode-sdk
 ```
 
 ## Configuration
@@ -28,17 +27,13 @@ go get github.com/SaidakbarPardaboyev/ucode-sdk
 Before using the SDK, you need to configure it with your UCode API credentials and settings.
 
 ```go
-import "github.com/SaidakbarPardaboyev/ucode-sdk"
+import "github.com/golanguzb70/ucode-sdk"
 
 config := &ucodesdk.Config{
     BaseURL:        "https://api.admin.u-code.io",
     FunctionName:   "your-function-name",
     RequestTimeout: 30 * time.Second,
-}
-
-// Set the APP_ID from environment variable
-if err := config.SetAppId(); err != nil {
-    log.Fatalf("Error setting APP_ID: %v", err)
+    AppId: "your_app_id"
 }
 
 // Create a new UCode API client
@@ -364,17 +359,3 @@ For more detailed examples and use cases, please refer to the `function_test.go`
 
 For any issues, feature requests, or questions, please open an issue in the GitHub repository or contact the maintainers.
 
-
-I've created a comprehensive README file for the UCode SDK. This README provides clear instructions on how to install, configure, and use the various functions provided by the SDK. It includes examples for all major operations such as creating, retrieving, updating, and deleting objects, as well as managing many-to-many relationships.
-
-The README is structured with the following sections:
-
-1. Installation
-2. Configuration
-3. Usage (with subsections for different operations)
-4. Error Handling
-5. Examples
-
-This structure allows users to quickly find the information they need, whether they're setting up the SDK for the first time or looking for specific usage examples.
-
-Is there anything specific you'd like to add or modify in this README? I can make changes or expand on any section as needed.
