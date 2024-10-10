@@ -2,7 +2,8 @@ package ucodesdk
 
 type (
 	Request struct {
-		Data map[string]interface{} `json:"data"`
+		Data     map[string]interface{} `json:"data"`
+		IsCached bool                   `json:"is_cached"`
 	}
 
 	Argument struct {
